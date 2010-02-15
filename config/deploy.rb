@@ -20,14 +20,34 @@ namespace :vlad do
     Rake::Task['vlad:upload'].invoke
   end
 
+  task :start do
+    Rake::Task['vlad:solr_start'].invoke
+    Rake::Task['vlad:thin_start'].invoke
+  end
+
+  task :stop do
+    Rake::Task['vlad:thin_stop'].invoke
+    Rake::Task['vlad:solr_stop'].invoke
+  end
+
+  desc "Start thin server"
+  remote_task :thin_start do
+    run "cd #{current_path}; thin -d -e #{rails_env} start"
+  end
+
+  desc "Stop thin server"
+  remote_task :thin_stop do
+    run "cd #{current_path}; thin -d -e #{rails_env} stop"
+  end
+
   desc "Start solr server"
   remote_task :solr_start do
-    run "cd #{current_path}; rake solr:start RAILS_ENV=#{rails_env}"
+    run "cd #{current_path}; rake solr:start RAILS_ENV=#{rails_env} >& /dev/null"
   end
 
   desc "Stop solr server"
   remote_task :solr_stop do
-    run "cd #{current_path}; rake solr:stop RAILS_ENV=#{rails_env}"
+    run "cd #{current_path}; rake solr:stop RAILS_ENV=#{rails_env} >& /dev/null"
   end
 end
 
