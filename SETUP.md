@@ -12,6 +12,7 @@
   * sudo apt-get install chkconfig # For configuring system services
   * sudo apt-get install "g++" # To compile 'thin' gem
   * May need to do "sudo ln -s /var/lib/gems/1.8/bin/thin /usr/bin/thin" to get thin in your path. (On my local box, gem install created /usr/bin/thin, but on production box it didn't. wierd.)
+  * sudo apt-get install nginx
   * sudo gem install vlad vlad-git
   * sudo gem install rails -v 2.3.4
   * sudo gem install hpricot
@@ -32,5 +33,7 @@ BendCal.org is using Vlad the Deployer, which is a rake-based deploy system.
   * rake vlad:setup  - Sets up the necessary resources and directories on the server
   * rake vlad:update - Pulls codebase from git
   * rake vlad:migrate - Creates/migrates database
-  * rake vald:solr_start - Starts solr service
-  * rake vald:thin_start - Starts web server
+  * rake vald:solr\_start - Starts solr service
+  * rake vald:thin\_start - Starts web server
+
+You'll also need to install and configure nginx.  There are two nginx\*.conf files in the config directory.  nginx.conf should be copied to /etc/nginx/nginx.conf, and will include the conf file, nginx\_bendcal.conf.
