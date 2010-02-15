@@ -37,7 +37,7 @@ namespace :vlad do
 
   desc "Stop thin server"
   remote_task :thin_stop do
-    run "cd #{current_path}; thin -d -e #{rails_env} stop"
+    run "cd #{current_path}; thin stop"
   end
 
   desc "Start solr server"

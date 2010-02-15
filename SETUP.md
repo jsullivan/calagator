@@ -27,4 +27,10 @@
 
 ## Deploying
 
-BendCal.org is using Vlad the Deployer, which is a rake-based deploy system. 
+BendCal.org is using Vlad the Deployer, which is a rake-based deploy system.
+
+  * rake vlad:setup  - Sets up the necessary resources and directories on the server
+  * rake vlad:update - Pulls codebase from git
+  * rake vlad:migrate - Creates/migrates database
+  * rake vald:solr_start - Starts solr service
+  * rake vald:thin_start - Starts web server
