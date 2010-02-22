@@ -14,7 +14,13 @@
 fieldset .trap { display: none }
 
 label       { font-weight: bold; }
-fieldset    { padding:1.4em; margin: 0 0 1.5em 0; border: 1px solid #ccc; }
+fieldset    {
+  padding:1.4em;
+  margin: 0 0 1.5em 0;
+  border: 2px solid #bcd; 
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+}
 legend      { font-weight: bold; font-size:1.2em; }
 
 

@@ -5,7 +5,7 @@ name: 'BendCal'
 tagline: "Bend's Tech Calendar"
 
 # Site's URL with trailing slash:
-url: 'http://tech.bendcal.com/'
+url: 'http://bendcal.org/'
 
 # Default timezone for Rails, run "rake time:zones:all" for options:
 timezone: 'Pacific Time (US & Canada)'

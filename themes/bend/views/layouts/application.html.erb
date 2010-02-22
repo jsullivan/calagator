@@ -5,6 +5,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title><%= cleanse(@page_title ? "#{@page_title} &raquo; " : "") %><%= SETTINGS.name %>: <%= SETTINGS.tagline %></title>
+    <link rel="shortcut icon" href="<%= theme_image_path "favicon.png" %>" type="image/x-icon">
 
     <!-- Stylesheets, static -->
     <%= theme_stylesheet_link_tag 'reset', :media => :all %>
@@ -13,6 +14,7 @@
     <!--[if IE]>
       <%= theme_stylesheet_link_tag 'ie', :media => :all %>
     <![endif]-->
+    <%= theme_stylesheet_link_tag 'theme', :media => :all %>
     <%= theme_stylesheet_link_tag 'print', :media => :print %>
 
     <!-- Stylesheets, inserted  -->
@@ -49,13 +51,9 @@
           <ul>
               <li class='<%=link_class[:events]%>'><%= link_to "Events", events_path %></li>
               <li class='<%=link_class[:venues]%>'><%= link_to "Venues", venues_path %></li>
+              <li class='<%=link_class[:about]%>'><%= link_to "&ldquo;ReadMe&rdquo;", :controller => "site", :action => "about" %></li>
               <!--<li class='<%=link_class[:import]%>'><%= link_to "Add Events", sources_path %></li>-->
           </ul>
-        </div>
-        <div id='project_menu'>
-          <strong>Get Involved:</strong> <%= link_to "Blog", "http://calagator.wordpress.com/", {:class => 'first'} %> | <%= link_to "Forum", "http://groups.google.com/group/pdx-tech-calendar/" %> | <%= link_to "Code", "http://calagator.googlecode.com/" %>
-          <br />
-          <strong>Something not right?</strong> <%= link_to "File an issue", "http://code.google.com/p/calagator/issues/list" %> or <%= link_to "get satisfaction", 'http://getsatisfaction.com/calagator' %>.
         </div>
         <% form_tag '/events/search', :method => :get do %>
           <div id='search_form'>
@@ -84,6 +82,10 @@
     </div>
 
     <div id="top_footer">
+      <ul id="sponsors">
+        <li>Powered by <a href="http://calagator.org/about">Calagator<a></li>
+        <li>BendCal.org hosting provided by <a href="http://codebenders.com"><%= theme_image_tag 'codebenders.png', {:style => "vertical-align: sub"} %></a></li>
+      </ul>
       <%= URI.parse(SETTINGS.url).host %>
       <%= source_code_version %>
     </div>

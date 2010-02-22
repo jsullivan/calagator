@@ -16,8 +16,7 @@ body {
 }
 
 #top_footer {
-  background: #444455;
-  color: #ecf9ff;
+  color: #666;
   padding: .5em 30px .5em 40px;
   font-size: 70%;
   clear: both;
@@ -63,8 +62,8 @@ body {
 
 #search_form {
   position:absolute;
-  right: 30px;
-  top: 15px;
+  right: 10px;
+  bottom: 10px;
 }
 
 .subnav {
@@ -94,14 +93,10 @@ body {
   background: url('/images/subnav_marker.png') no-repeat center bottom;
 }
 
-
-
 #content {
-  min-height: 40em;
-  margin: 1em 30px 1em 40px;
+  padding: 1em 30px 40px 40px;
   position: relative;
 }
-
 
 .sidebar h3 {
   font-weight: bold;
@@ -134,7 +129,7 @@ body {
   padding-top: 1em;
 }
 
-#list_items { margin-right: 20em; }
+#list_items { margin-right: 160px; }
 
 .event_table .description,
 .event_table .url,
@@ -168,13 +163,16 @@ ul.event_list .day_of_week {
 
 
 .sidebar {
-  background: #e8fbfe;
-  padding: 2em 30px 1em 1em;
+  padding: 1em;
   position: absolute;
   top: 0;
   right: 0;
-  margin: -1em -30px 0 0;
-  width: 200px;
+  margin: 0em 0em 1em 1em;
+  width: 150px;
+  border: solid 3px #94BCF7;
+  border-width: 0px 0px 2px 2px;
+  -moz-border-radius-bottomleft: 16px;
+  -webkit-border-bottom-left-radius: 16px;
 }
 
 .contentbar {
@@ -381,11 +379,15 @@ fieldset .help {
 }
 
 #project_description {
-  background: #e8fbfe;
   padding: 1em;
   width: 20em;
-  margin: 0 2em 0 -1em;
-  float: left;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  border: solid 3px #94BCF7;
+  border-width: 0px 2px 2px 0px;
+  -moz-border-radius-bottomright: 16px;
+  -webkit-border-bottom-right-radius: 16px;
 }
 
 #project_description a {
