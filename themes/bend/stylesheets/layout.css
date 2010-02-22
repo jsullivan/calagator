@@ -6,9 +6,10 @@ body {
 }
 
 #global_header {
+  text-align: center;
   background: #5582c5;
   position: relative;
-  height: 95px;
+  height: 65px;
 }
 
 #global_header a {
@@ -22,11 +23,9 @@ body {
   clear: both;
 }
 
-
 #project_title {
-  position: absolute;
-  left: 38px;
-  font-size: 30pt;
+  font-size: 20pt;
+  font-weight: bold;
 }
 
 #app_menu ul {
