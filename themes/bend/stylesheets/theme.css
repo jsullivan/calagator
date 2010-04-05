@@ -1,10 +1,12 @@
 #outer {
-  margin: 10px;
+  margin: 10px auto;
+  max-width: 960px;
   -moz-box-shadow: 2px 2px 2px rgba(0,0,0,.5);
   -webkit-box-shadow: 2px 2px 2px rgba(0,0,0,.5);
   -moz-border-radius: 16px;
   -webkit-border-radius: 16px;
   border: solid 2px #94BCF7;
+  width: 800px;
 }
 #global_header {
   -moz-border-radius-topright: 14px;
@@ -14,8 +16,13 @@
 }
 
 #project_title {
+  font-size: 20pt;
+  font-weight: bold;
   font-family: 'Trebuchet MS','Lucida Grande',Verdana,Arial,Sans-Serif;
-  text-shadow: 2px 2px 2px rgba(0,0,0,.3);
+  text-shadow: 0px 0px 4px #fff;
+  position: absolute;
+  left: 40px;
+  top: 4px;
 }
 
 #sponsors {
