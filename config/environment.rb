@@ -22,28 +22,8 @@ Rails::Initializer.run do |config|
 
   # Specify gems that this application depends on. 
   # They can then be installed with "rake gems:install" on new installations.
-  config.gem 'htmlentities', :version => '4.0.0'
-  config.gem 'vpim', :version => '0.695'
-  config.gem 'lucene_query' # bundled
-  # NOTE: There's an evil 'has_many_polymorphs' 2.13 that's broken, and a 'johnsbrn-has_many_polymorphs' 2.13.3 that that only works with Rails 2.2
-  # config.gem 'has_many_polymorphs', :version => '2.12'
-  config.gem 'johnsbrn-has_many_polymorphs', :lib => 'has_many_polymorphs', :source => 'http://gems.github.com', :version => '>=2.13.4'
-  config.gem 'airblade-paper_trail', :lib => 'paper_trail', :source => 'http://gems.github.com', :version => '1.1.1'
-  config.gem 'mislav-will_paginate', :lib => 'will_paginate', :source => 'http://gems.github.com', :version => '2.3.11'
-  config.gem 'columnize', :version => '0.3.0'
-  config.gem 'linecache', :version => '0.43'
-  config.gem 'hpricot', :version => '0.8.1'
-  config.gem 'rubyzip', :lib =>  'zip/zip', :version => '0.9.1'
-  config.gem 'facets', :version => '2.5.2', :lib => false
-  config.gem 'ri_cal', :version => '0.8.5'
 
-  case RAILS_ENV
-  when "test", "development"
-    config.gem 'rspec', :version => '1.3.1', :lib => false
-    config.gem 'rspec-rails', :version => '1.3.3', :lib => false
-  end
-
-  require 'fileutils'
+  # Moved to bundler. Install with "bundle install"
 
   # Settings in config/environments/* take precedence over those specified here.
   # Application configuration should go into files in config/initializers
