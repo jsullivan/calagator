@@ -1,10 +1,9 @@
-set :application, "bendcal"
-set :user, "calagator"
-set :domain, "#{user}@bendcal.org"
-
-set :repository,  "git://github.com/broofa/calagator.git"
-
-set :deploy_to, "/home/calagator/bendcal"
+set :application,   "bendcal"
+set :user,          "calagator"
+set :domain,         "#{user}@bendcal.org"
+set :repository,     "git://github.com/broofa/calagator.git"
+set :deploy_to,      "/home/calagator/bendcal"
+set :config_files,   ['database~custom.yml','theme.txt','secrets.yml','geocoder_api_keys.yml']
 
 namespace :vlad do
   desc "Full deployment of BendCal"
@@ -13,11 +12,15 @@ namespace :vlad do
     vlad:migrate
   ]
 
+  desc "Copy config files from shared/config to release directory"
+  remote_task :copy_config_files do
+    config_files.each do |filename|
+      run "cp #{shared_path}/config/#{filename} #{release_path}/config/#{filename}"
+    end
+  end
+
   task :update do
-    # Upload non-SCM'ed config files
-    ENV['FILES'] = 'config/theme.txt, config/secrets.yml, config/geocoder_api_keys.yml'
-    puts "Uploading " + ENV['FILES']
-    Rake::Task['vlad:upload'].invoke
+    Rake::Task['vlad:copy_config_files'].invoke
   end
 
   task :start do
