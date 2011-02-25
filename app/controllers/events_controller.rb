@@ -15,17 +15,8 @@ class EventsController < ApplicationController
           'lower(venues.title), start_time'
         end
 
-    default_start_date = Time.today
-    default_end_date   = Time.today + 3.months
-    begin
-      @start_date = !params[:date].blank? ? Date.parse(params[:date][:start]) : default_start_date
-      @end_date = !params[:date].blank? ? Date.parse(params[:date][:end]) : default_end_date
-    rescue ArgumentError => e
-      @start_date = default_start_date
-      @end_date   = default_end_date
-      flash[:failure] = "You tried to filter by an invalid date"
-    end
-
+    @start_date = date_or_default_for(:start)
+    @end_date = date_or_default_for(:end)
     @events_deferred = lambda {
       params[:date] ?
         Event.find_by_dates(@start_date, @end_date, :order => order) :
@@ -171,7 +162,7 @@ class EventsController < ApplicationController
 
   # GET /events/duplicates
   def duplicates
-    @type = params[:type] || 'title'
+    @type = params[:type]
     begin
       @grouped_events = Event.find_duplicates_by_type(@type)
     rescue ArgumentError => e
@@ -194,7 +185,7 @@ class EventsController < ApplicationController
 
     @query = params[:query].with{blank? ? nil : self}
     @tag = params[:tag].with{blank? ? nil : self}
-    @current = ["1", "true"].include?(params[:current].to_s) ? true : false
+    @current = ["1", "true"].include?(params[:current])
     @order = params[:order]
 
     if @order && @order == "score" && @tag
@@ -214,18 +205,13 @@ class EventsController < ApplicationController
     elsif @query
       @grouped_events = Event.search_grouped_by_currentness(@query, :order => @order, :skip_old => @current)
     elsif @tag
-      if @order
-        # TODO make it possible to order items when searching by tag
-        flash[:failure] = "Sorry, you can't order events returned by a tag search yet"
-        @order = nil
-      end
       @grouped_events = Event.search_tag_grouped_by_currentness(@tag, :order => @order, :current => @current)
     end
 
     # setting @events so that we can reuse the index atom builder
     @events = @grouped_events[:past] + @grouped_events[:current]
 
-    @page_title = "Search Results for '#{@query}'"
+    @page_title = @tag ? "Events tagged with '#{@tag}'" : "Search Results for '#{@query}'"
 
     render_events(@events)
   end
@@ -295,4 +281,39 @@ protected
     end
   end
 
+  # Return the default start date.
+  def default_start_date
+    Time.today
+  end
+
+  # Return the default end date.
+  def default_end_date
+    Time.today + 3.months
+  end
+
+  # Return a date parsed from user arguments or a default date. The +kind+
+  # is a value like :start, which refers to the `params[:date][+kind+]` value.
+  # If there's an error, set an error message to flash.
+  def date_or_default_for(kind)
+    if params[:date].present?
+      if params[:date].respond_to?(:has_key?)
+        if params[:date].has_key?(kind)
+          if params[:date][kind].present?
+            begin
+              return Date.parse(params[:date][kind])
+            rescue ArgumentError => e
+              append_flash :failure, "Can't filter by an invalid #{kind} date."
+            end
+          else
+            append_flash :failure, "Can't filter by an empty #{kind} date."
+          end
+        else
+          append_flash :failure, "Can't filter by a missing #{kind} date."
+        end
+      else
+        append_flash :failure, "Can't filter by a malformed #{kind} date."
+      end
+    end
+    return self.send("default_#{kind}_date")
+  end
 end

@@ -117,14 +117,32 @@ class Venue < ActiveRecord::Base
     Event.find_future_events(opts)
   end
 
-  # Return Hash of Venues grouped by the +type+, e.g., a 'title'.
-  # TODO Consider renaming "type" in the method name and arguments to 'attribute'. ActiveRecord uses the term 'type' to mean a STI (Single Table Inheritance) class field, while 'attribute' is analogous to a table's column.
-  def self.find_duplicates_by_type(type='title')
-    if type == 'na'
-      return { [] => self.find(:non_duplicates, :order => 'lower(title)')}
+  # Return Hash of Venues grouped by the +type+, e.g., a 'title'. Each Venue
+  # record will include an <tt>events_count</tt> field containing the number of
+  # events at the venue, which improves performance for displaying these.
+  def self.find_duplicates_by_type(type='na')
+    case type
+    when 'na', nil, ''
+      # The LEFT OUTER JOIN makes sure that venues without any events are also returned.
+      return { [] => \
+        self.all(
+          :select     => 'venues.*, COUNT(DISTINCT events.id) AS events_count',
+          :joins      => 'LEFT OUTER JOIN events ON events.venue_id = venues.id',
+          :group      => 'venues.id',
+          :conditions => 'venues.duplicate_of_id IS NULL',
+          :order      => 'LOWER(venues.title)'
+        )
+      }
     else
       kind = %w[all any].include?(type) ? type.to_sym : type.split(',')
-      return self.find_duplicates_by(kind, :grouped => true)
+
+      return self.find_duplicates_by(kind, 
+        :grouped  => true, 
+        :select   => 'COUNT(DISTINCT events.id) AS events_count',
+        :joins    => 'LEFT OUTER JOIN events ON events.venue_id = a.id',
+        :where    => 'a.duplicate_of_id IS NULL AND b.duplicate_of_id IS NULL',
+        :group_by => 'a.id'
+      )
     end
   end
 
@@ -132,7 +150,7 @@ class Venue < ActiveRecord::Base
 
   # Does this venue have any address information?
   def has_full_address?
-    !"#{street_address}#{locality}#{region}#{postal_code}#{country}".blank?
+    return [street_address, locality, region, postal_code, country].any?(&:present?)
   end
 
   # Display a single line address.
@@ -181,7 +199,9 @@ class Venue < ActiveRecord::Base
         self.postal_code    = geo.zip            if self.postal_code.blank?
         self.country        = geo.country_code   if self.country.blank?
       end
-      # puts "Geocoding #{geo.success ? "successful" : "failed"}: #{geo.inspect}"
+
+      msg = 'Venue#add_geocoding for ' + (self.new_record? ? 'new record' : "record #{self.id}") + ' ' + (geo.success ? 'was successful' : 'failed') + ', response was: ' + geo.inspect
+      Rails.logger.info(msg)
     end
 
     return true

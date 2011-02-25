@@ -105,6 +105,12 @@ describe Event do
       @event.reload
       @event.tags.first.name.should == "123"
     end
+
+    it "should return a collection of events for a given tag" do
+      @event.tag_list = @tags
+      @event.save
+      Event.tagged_with('tags').should == [@event]
+    end
   end
 
   describe "when parsing" do
@@ -147,9 +153,7 @@ describe Event do
       abstract_event.title.should == @basic_event.title
       abstract_event.url.should == @basic_event.url
 
-      # TODO implement venue generation
-      #abstract_event.location.title.should == @basic_event.venue.title
-      abstract_event.location.should be_nil
+      abstract_event.location.title.should == @basic_event.venue.title
     end
 
     it "should parse an Event into an iCalendar without a URL and generate it" do
@@ -164,9 +168,7 @@ describe Event do
       abstract_event.title.should == @basic_event.title
       abstract_event.url.should == generated_url
 
-      # TODO implement venue generation
-      #abstract_event.location.title.should == @basic_event.venue.title
-      abstract_event.location.should be_nil
+      abstract_event.location.title.should == @basic_event.venue.title
     end
 
   end
@@ -178,12 +180,12 @@ describe Event do
 
     # TODO: write integration specs for the following 2 tests
     it "should find all events with duplicate titles" do
-      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title ) ORDER BY a.title")
+      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title )")
       Event.find_duplicates_by(:title)
     end
 
     it "should find all events with duplicate titles and urls" do
-      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title AND a.url = b.url ) ORDER BY a.title,a.url")
+      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title AND a.url = b.url )")
       Event.find_duplicates_by([:title,:url])
     end
 
@@ -536,12 +538,12 @@ describe Event do
 
   describe "with finding duplicates" do
     it "should find all events with duplicate titles" do
-      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title ) ORDER BY a.title")
+      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title )")
       Event.find(:duplicates, :by => :title )
     end
 
     it "should find all events with duplicate titles and urls" do
-      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title AND a.url = b.url ) ORDER BY a.title,a.url")
+      Event.should_receive(:find_by_sql).with("SELECT DISTINCT a.* from events a, events b WHERE a.id <> b.id AND ( a.title = b.title AND a.url = b.url )")
       Event.find(:duplicates, :by => [:title,:url])
     end
 
@@ -757,7 +759,7 @@ describe Event do
     fixtures :events
 
     def ical_roundtrip(events, opts = {})
-      parsed_events = Vpim::Icalendar.decode( Event.to_ical(events, opts) ).first.events
+      parsed_events = Vpim::Icalendar.decode( Event.to_ical(events, opts) ).first.events.to_a
       if events.is_a?(Event)
         parsed_events.first
       else
@@ -817,14 +819,80 @@ describe Event do
       event = Event.create( valid_event_attributes.merge(:end_time => valid_event_attributes[:start_time] + 4.days) )
       parsed_event = ical_roundtrip( event )
 
-      # UTC is used here because we're currently outputting _all_ iCalendar times as UTC.
-      # We really need to make it so that isn't happening.
-      #
-      # FIXME: Time zone data should be included in iCalendar output. Really.
-
-      start_time = Time.today.utc + Time.today.gmtoff
+      start_time = Time.today.utc.at_midnight
       parsed_event.dtstart.should == start_time
       parsed_event.dtend.should == start_time + 5.days
     end
+
+    describe "sequence" do
+      def event_to_ical(event)
+        return Vpim::Icalendar.decode(Event.to_ical([event])).first.events.to_a.first
+      end
+
+      it "should set an initial sequence on a new event" do
+        event = Event.create(valid_event_attributes)
+        ical = event_to_ical(event)
+        ical.sequence.should == 1
+      end
+
+      it "should increment the sequence if it is updated" do
+        event = Event.create(valid_event_attributes)
+        event.update_attribute(:title, "Update 1")
+        ical = event_to_ical(event)
+        ical.sequence.should == 2
+      end
+
+      # it "should offset the squence based the global SECRETS.icalendar_sequence_offset" do
+        # SECRETS.should_receive(:icalendar_sequence_offset).and_return(41)
+        # event = Event.create(valid_event_attributes)
+        # ical = event_to_ical(event)
+        # ical.sequence.should == 42
+      # end
+    end
+
+    describe "- the headers" do
+      fixtures :events
+
+      before(:each) do
+        @data = Event.to_ical(events(:tomorrow))
+      end
+
+      it "should include the calendar name" do
+        @data.should =~ /\sX-WR-CALNAME:#{SETTINGS.name}\s/
+      end
+
+      it "should include the method" do
+        @data.should =~ /\sMETHOD:PUBLISH\s/
+      end
+
+      it "should include the scale" do
+        @data.should =~ /\sCALSCALE:Gregorian\s/i
+      end
+    end
+
   end
+
+  describe "sorting labels" do
+    it "should have sorting labels" do
+      Event::SORTING_LABELS.should be_a_kind_of(Hash)
+    end
+
+    it "should display human-friendly label for a known value" do
+      Event::sorting_label_for('name').should == 'Event Name'
+    end
+
+    it "should display raw label for unknown value" do
+      # TODO Should we only show labels for known keys?
+      Event::sorting_label_for('kitten').should == 'kitten'
+    end
+
+    it "should display a default label" do
+      Event::sorting_label_for(nil).should == 'Relevance'
+    end
+
+    it "should display a different default label when searching by tag" do
+      Event::sorting_label_for(nil, true).should == 'Date'
+    end
+  end
+
 end

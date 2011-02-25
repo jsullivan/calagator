@@ -22,22 +22,25 @@
 class Event < ActiveRecord::Base
   Tag # this class uses tagging. referencing the Tag class ensures that has_many_polymorphs initializes correctly across reloads.
 
+  # Treat any event with a duration of at least this many hours as a multiday
+  # event. This constant is used by the #multiday? method and is primarily
+  # meant to make iCalendar exports display this event as covering a range of
+  # days, rather than hours.
   MIN_MULTIDAY_DURATION = 20.hours
 
   # Names of columns and methods to create Solr indexes for
   INDEXABLE_FIELDS = \
-    %w(
-      title
-      description
+    %w[
       url
       duplicate_for_solr
       start_time_for_solr
       end_time_for_solr
       event_title_for_solr
       venue_title_for_solr
+      description_for_solr
+      tag_list_for_solr
       text_for_solr
-      tag_list
-    ).map(&:to_sym)
+    ].map(&:to_sym)
 
   unless RAILS_ENV == 'test'
     acts_as_solr :fields => INDEXABLE_FIELDS
@@ -258,14 +261,41 @@ class Event < ActiveRecord::Base
   end
 
   # Return Hash of Events grouped by the +type+.
-  def self.find_duplicates_by_type(type='title')
-    if type == 'na'
+  def self.find_duplicates_by_type(type='na')
+    case type
+    when 'na', nil
       return { [] => self.find_future_events }
     else
       kind = %w[all any].include?(type) ? type.to_sym : type.split(',')
       return self.find_duplicates_by(kind,
         :grouped => true,
         :where => "a.start_time >= #{self.connection.quote(Time.now - 1.day)}")
+    end
+  end
+
+  #---[ Sort labels ]-------------------------------------------
+
+  # Labels displayed for sorting options:
+  SORTING_LABELS = {
+    'name'  => 'Event Name',
+    'venue' => 'Location',
+    'score' => 'Relevance',
+    'date'  => 'Date'
+  }
+
+  # Return the label for the +sorting_key+ (e.g. 'score'). Optionally set the
+  # +is_searching_by_tag+, to constrain options available for tag searches.
+  def self.sorting_label_for(sorting_key=nil, is_searching_by_tag=false)
+    sorting_key = sorting_key.to_s
+    if SORTING_LABELS.has_key?(sorting_key)
+      SORTING_LABELS[sorting_key]
+    elsif sorting_key.present?
+      # TODO Should we only show labels for known keys?
+      sorting_key
+    elsif is_searching_by_tag
+      SORTING_LABELS['date']
+    else
+      SORTING_LABELS['score']
     end
   end
 
@@ -315,24 +345,25 @@ class Event < ActiveRecord::Base
     order = opts[:order].ergo.to_sym || DEFAULT_SEARCH_ORDER
 
     formatted_query = \
-      %{NOT duplicate_for_solr:"1" AND (} \
-      << query \
-      .downcase \
-      .gsub(/:/, '?') \
-      .scan(/\S+/) \
-      .map(&:escape_lucene) \
-      .map{|term| %{
-        title:"#{term}"~#{SOLR_SIMILARITY}^#{SOLR_TITLE_BOOST}
-        OR tag:"#{term}"~#{SOLR_SIMILARITY}^#{SOLR_TITLE_BOOST}
-        OR "#{term}"~#{SOLR_SIMILARITY}}
-      } \
-      .join(' ') \
-      .gsub(/^\s{2,}|\s{2,}$|\s{2,}/m, ' ') \
-      << ')'
+      'NOT duplicate_for_solr:"1" AND (' \
+      << query.downcase.gsub(/:/, '?').scan(/\S+/).map(&:escape_lucene).map{|term|
+          <<-HERE
+            event_title_for_solr:#{term}^#{SOLR_TITLE_BOOST}
+              OR event_title_for_solr:#{term}~#{SOLR_SIMILARITY}^#{SOLR_TITLE_BOOST}
+            OR tag_list_for_solr:#{term}^#{SOLR_TITLE_BOOST}
+              OR tag_list_for_solr:#{term}~#{SOLR_SIMILARITY}^#{SOLR_TITLE_BOOST}
+            OR title:#{term}^#{SOLR_TITLE_BOOST}
+              OR title:#{term}~#{SOLR_SIMILARITY}^#{SOLR_TITLE_BOOST}
+            OR #{term}~#{SOLR_SIMILARITY}
+              OR #{term}
+          HERE
+        }.map(&:strip).join(' ').gsub(/\s{2,}/m, ' ') << ')'
 
     if skip_old
-      formatted_query << %{ AND (start_time_for_solr:[#{Time.today.yesterday.strftime(SOLR_TIME_FORMAT)} TO #{SOLR_TIME_MAXIMUM}])}
+      formatted_query << " AND (start_time_for_solr:[#{Time.today.yesterday.strftime(SOLR_TIME_FORMAT)} TO #{SOLR_TIME_MAXIMUM}])"
     end
+
+    logger.info("Event::search, formatted_query: #{formatted_query}")
 
     solr_opts = {
       :order => "score desc",
@@ -364,6 +395,16 @@ class Event < ActiveRecord::Base
   # Options:
   # * :current => Limit results to only current events? Defaults to false.
   def self.search_tag_grouped_by_currentness(tag, opts={})
+    case opts[:order]
+      when 'name', 'title'
+        opts[:order] = 'events.title'
+      when 'date'
+        opts[:order] = 'events.start_time'
+      when 'venue'
+        opts[:order] = 'venues.title'
+        opts[:include] = :venue
+    end
+
     result = self.group_by_currentness(self.tagged_with(tag, opts))
     # TODO Avoid searching for :past results. Currently finding them and discarding them when not wanted.
     result[:past] = [] if opts[:current]
@@ -419,17 +460,29 @@ class Event < ActiveRecord::Base
   end
 
   def event_title_for_solr
-    self.title.to_s.downcase
+    self.class.sanitize_for_solr(self.title)
   end
 
   def venue_title_for_solr
-    self.venue.ergo.title.to_s.downcase
+    self.class.sanitize_for_solr(self.venue.ergo.title)
+  end
+
+  def tag_list_for_solr
+    self.class.sanitize_for_solr(self.tag_list)
+  end
+
+  def description_for_solr
+    self.class.sanitize_for_solr(self.description)
   end
 
   # Return a string containing the text of all the indexable fields joined together.
   def text_for_solr
     # NOTE: The #text_for_solr method is one of the INDEXABLE_FIELDS, so don't indexing it to avoid an infinite loop. Some fields are methods, not database columns, so use #send rather than read_attribute.
-    (INDEXABLE_FIELDS - [:text_for_solr]).map{|name| self.send(name).to_s.downcase}.join("|").to_s
+    (INDEXABLE_FIELDS - [:text_for_solr]).map{|name| self.class.sanitize_for_solr(self.send(name))}.join("|").to_s
+  end
+
+  def self.sanitize_for_solr(text)
+    return text.to_s.downcase.gsub(/[^[:alnum:]]/, ' ').gsub(/\s{2,}/, ' ')
   end
 
   #---[ Transformations ]-------------------------------------------------
@@ -445,6 +498,7 @@ class Event < ActiveRecord::Base
     event.end_time     = abstract_event.end_time.blank? ? nil : Time.parse(abstract_event.end_time.to_s)
     event.url          = abstract_event.url
     event.venue        = Venue.from_abstract_location(abstract_event.location, source) if abstract_event.location
+    event.tag_list     = abstract_event.tags.join(',')
 
     duplicates = event.find_exact_duplicates
     event = duplicates.first.progenitor if duplicates
@@ -486,62 +540,67 @@ EOF
   #   ics2 = Event.to_ical(myevents, :url_helper => lambda{|event| event_url(event)})
   def self.to_ical(events, opts={})
     events = [events].flatten
-    icalendar = Vpim::Icalendar.create2
+    
+    icalendar = RiCal.Calendar do |calendar|
+      for item in events
+        calendar.event do |entry|
+          entry.summary(item.title || 'Untitled Event')
+          
+          desc = returning String.new do |d|
+            if item.multiday?
+              d << "This event runs from #{TimeRange.new(item.start_time, item.end_time, :format => :text).to_s}."
+              d << "\n\n Description:\n"
+            end
 
-    for event in events
-      next if event.start_time.nil?
-      icalendar.add_event do |c|
-        if event.multiday?
-          c.dtstart     event.dates.first
-          c.dtend       event.dates.last + 1.day
-        else
-          c.dtstart     event.start_time
-          c.dtend       event.end_time || event.start_time + 1.hour
-        end
+            d << Hpricot(item.description).to_plain_text unless item.description.blank?
+            d << "\n\nTags:\n#{item.tag_list}" unless item.tag_list.blank?
+          end
+          
+          entry.description(desc) unless desc.blank?
+          
+          entry.created       item.created_at if item.created_at
+          entry.last_modified item.updated_at if item.updated_at
 
-        c.summary       event.title || 'Untitled Event'
-        c.created       event.created_at if event.created_at
-        c.lastmod       event.updated_at if event.updated_at
-
-        description = returning String.new do |d|
-
-          if event.multiday?
-            d << "This event runs from #{TimeRange.new(event.start_time, event.end_time, :format => :text).to_s}."
-            d << "\n\n Description:\n"
+          # Set the iCalendar SEQUENCE, which should be increased each time an
+          # event is updated. If an admin needs to forcefully increment the
+          # SEQUENCE for all events, they can edit the "config/secrets.yml"
+          # file and set the "icalendar_sequence_offset" value to something
+          # greater than 0.
+          entry.sequence((SECRETS.icalendar_sequence_offset || 0) + item.versions.count)
+          
+          if item.multiday?
+            entry.dtstart item.dates.first
+            entry.dtend   item.dates.last + 1.day
+          else
+            entry.dtstart item.start_time
+            entry.dtend   item.end_time || item.start_time + 1.hour
           end
 
-          d << Hpricot(event.description).to_plain_text unless event.description.blank?
-          d << "\n\nTags:\n#{event.tag_list}" unless event.tag_list.blank?
+          # The reason for this messy URL helper business is that models can't access the route helpers,
+          # and even if they could, they'd need to access the request object so they know what the server's name is and such.
+          if item.url.blank?
+            entry.url opts[:url_helper].call(item) if opts[:url_helper]
+          else
+            entry.url item.url
+          end
 
+          entry.location item.venue.title if item.venue
+          
+          # dtstamp and uid added because of a bug in Outlook;
+          # Outlook 2003 will not import an .ics file unless it has DTSTAMP, UID, and METHOD
+          # use created_at for DTSTAMP; if there's no created_at, use event.start_time;
+          entry.dtstamp item.created_at || item.start_time
+          entry.uid     "#{opts[:url_helper].call(item)}" if opts[:url_helper]
         end
-
-        c.description   description unless description.blank?
-
-        # The reason for this messy URL helper business is that models can't access the route helpers,
-        # and even if they could, they'd need to access the request object so they know what the server's name is and such.
-        if event.url.blank?
-          c.url         opts[:url_helper].call(event) if opts[:url_helper]
-        else
-          c.url         event.url
-        end
-
-        # dtstamp and uid added because of a bug in Outlook;
-        # Outlook 2003 will not import an .ics file unless it has DTSTAMP, UID, and METHOD
-        # use created_at for DTSTAMP; if there's no created_at, use event.start_time;
-        c.dtstamp       event.created_at || event.start_time
-        c.uid           "#{opts[:url_helper].call(event)}" if opts[:url_helper]
-
-        # TODO Figure out how to encode a venue. Remember that Vpim can't handle Vvenue itself and our parser had to
-        # go through many hoops to extract venues from the source data. Also note that the Vevent builder here doesn't
-        # recognize location, priority, and a couple of other things that are included as modules in the Vevent class itself.
-        # This seems like a bug in Vpim.
-        #c.location     !event.venue.nil? ? event.venue.title : ''
       end
     end
-
-    # TODO Add calendar title support to vpim or find a prettier way to do this.
-    # method added because of bug in Outlook 2003, which won't import .ics without a METHOD
-    return icalendar.encode.sub(/CALSCALE:Gregorian/, "CALSCALE:Gregorian\nX-WR-CALNAME:#{SETTINGS.name}\nMETHOD:PUBLISH")
+    
+    # Add the calendar name, normalize line-endings to UNIX LF, then replace them with DOS CF-LF.
+    return icalendar.
+      export.
+      sub(/(CALSCALE:\w+)/i, "\\1\nX-WR-CALNAME:#{SETTINGS.name}\nMETHOD:PUBLISH").
+      gsub(/\r\n/,"\n").
+      gsub(/\n/,"\r\n")
   end
 
   def location

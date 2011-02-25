@@ -5,7 +5,7 @@
 # ENV['RAILS_ENV'] ||= 'production'
 
 # Specifies gem version of Rails to use when vendor/rails is not present
-RAILS_GEM_VERSION = '~> 2.3.4' unless defined? RAILS_GEM_VERSION
+RAILS_GEM_VERSION = '2.3.5' unless defined? RAILS_GEM_VERSION
 
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
@@ -22,25 +22,28 @@ Rails::Initializer.run do |config|
 
   # Specify gems that this application depends on. 
   # They can then be installed with "rake gems:install" on new installations.
-  # config.gem "bj"
-  # config.gem "hpricot", :version => '0.6', :source => "http://code.whytheluckystiff.net"
-  # config.gem "aws-s3", :lib => "aws/s3"
-  config.gem "htmlentities"
-  config.gem "vpim"
-  config.gem "lucene_query"
-  # NOTE: There's an evil "has_many_polymorphs" 2.13 that's broken, and a "johnsbrn-has_many_polymorphs" 2.13.3 that that only works with Rails 2.2
-  # config.gem "has_many_polymorphs", :version => "2.12"
-  config.gem "johnsbrn-has_many_polymorphs", :lib => 'has_many_polymorphs', :source => "http://gems.github.com", :version => ">=2.13.4"
-  config.gem 'airblade-paper_trail', :lib => 'paper_trail', :source => 'http://gems.github.com'
-  config.gem 'mislav-will_paginate', :lib => 'will_paginate', :source => 'http://gems.github.com'
+  config.gem 'htmlentities', :version => '4.0.0'
+  config.gem 'vpim', :version => '0.695'
+  config.gem 'lucene_query' # bundled
+  # NOTE: There's an evil 'has_many_polymorphs' 2.13 that's broken, and a 'johnsbrn-has_many_polymorphs' 2.13.3 that that only works with Rails 2.2
+  # config.gem 'has_many_polymorphs', :version => '2.12'
+  config.gem 'johnsbrn-has_many_polymorphs', :lib => 'has_many_polymorphs', :source => 'http://gems.github.com', :version => '>=2.13.4'
+  config.gem 'airblade-paper_trail', :lib => 'paper_trail', :source => 'http://gems.github.com', :version => '1.1.1'
+  config.gem 'mislav-will_paginate', :lib => 'will_paginate', :source => 'http://gems.github.com', :version => '2.3.11'
+  config.gem 'columnize', :version => '0.3.0'
+  config.gem 'linecache', :version => '0.43'
+  config.gem 'hpricot', :version => '0.8.1'
+  config.gem 'rubyzip', :lib =>  'zip/zip', :version => '0.9.1'
+  config.gem 'facets', :version => '2.5.2', :lib => false
+  config.gem 'ri_cal', :version => '0.8.5'
 
-  config.gem "hpricot"
-  config.gem "rubyzip", :lib =>  "zip/zip"
-  config.gem 'rspec', :version => '>= 1.2.0', :lib => false
-  config.gem 'rspec-rails', :version => '>= 1.2.0', :lib => false
-  config.gem "facets", :version => ">=2.5.0", :lib => false
+  case RAILS_ENV
+  when "test", "development"
+    config.gem 'rspec', :version => '1.3.1', :lib => false
+    config.gem 'rspec-rails', :version => '1.3.3', :lib => false
+  end
 
-  config.time_zone = "Pacific Time (US & Canada)"
+  require 'fileutils'
 
   # Settings in config/environments/* take precedence over those specified here.
   # Application configuration should go into files in config/initializers
@@ -119,7 +122,7 @@ Rails::Initializer.run do |config|
   require 'settings_reader'
   SETTINGS = SettingsReader.read(
     theme_file("settings.yml"), {
-      'timezone'                 => 'Pacific Time (US & Canada)',
+      'timezone' => 'Pacific Time (US & Canada)',
     }
   )
 
@@ -127,7 +130,6 @@ Rails::Initializer.run do |config|
   config.time_zone = SETTINGS.timezone
 
   # Set timezone for OS
-  # FIXME this is an evil temporary workaround, in future SETTINGS.timezone will be enough
   ENV['TZ'] = SETTINGS.tz if SETTINGS.tz
 
   # Set cookie session
