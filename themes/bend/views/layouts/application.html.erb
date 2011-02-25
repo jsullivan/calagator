@@ -52,7 +52,6 @@
               <li class='<%=link_class[:events]%>'><%= link_to "Events", events_path %></li>
               <li class='<%=link_class[:venues]%>'><%= link_to "Venues", venues_path %></li>
               <li class='<%=link_class[:about]%>'><%= link_to "&ldquo;ReadMe&rdquo;", :controller => "site", :action => "about" %></li>
-              <!--<li class='<%=link_class[:import]%>'><%= link_to "Add Events", sources_path %></li>-->
           </ul>
         </div>
         <% form_tag '/events/search', :method => :get do %>
@@ -76,14 +75,13 @@
 
 
     <div id="content">
-      <%# flash[:success] = "yay"; flash[:failure] = "meh" %>
       <%= render_flash %>
       <%= yield %>
     </div>
 
     <div id="top_footer">
       <ul id="sponsors">
-        <li>Powered by <a href="http://calagator.org/about">Calagator<a></li>
+        <li>Powered by <a href="http://calagator.org/about">Calagator</a></li>
         <li>BendCal.org hosting provided by <a href="http://codebenders.com"><%= theme_image_tag 'codebenders.png', {:style => "vertical-align: sub"} %></a></li>
       </ul>
       <%= URI.parse(SETTINGS.url).host %>
@@ -92,7 +90,7 @@
 
 </div> <% # outer %>
 
-    <% if ENV['RAILS_ENV'] == 'production' %>
+    <% if Rails.env.production? %>
       <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
         document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
