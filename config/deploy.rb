@@ -16,6 +16,7 @@ namespace :vlad do
   desc "Full deployment of BendCal"
   task "deploy" => %w[
     vlad:update
+    vlad:bundle:install
     vlad:migrate
   ]
 
