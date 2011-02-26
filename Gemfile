@@ -22,3 +22,7 @@ group :development,:test do
   gem 'rspec', '1.3.1'
   gem 'rspec-rails', '1.3.3'
 end
+
+group :preview,:production do
+  gem 'thin'
+end

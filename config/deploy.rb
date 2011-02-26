@@ -1,9 +1,16 @@
+require 'bundler/vlad'
+
 set :application,   "bendcal"
 set :user,          "calagator"
 set :domain,         "#{user}@bendcal.org"
 set :repository,     "git://github.com/broofa/calagator.git"
 set :deploy_to,      "/home/calagator/bendcal"
 set :config_files,   ['database~custom.yml','theme.txt','secrets.yml','geocoder_api_keys.yml']
+
+task :preview do
+  set :domain, "linode-calagator"
+  set :rails_env, "preview"
+end
 
 namespace :vlad do
   desc "Full deployment of BendCal"
