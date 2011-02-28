@@ -1,3 +1,8 @@
+a:focus, 
+a:hover     { color: #445544; text-decoration: underline; }
+a:link      { color: #999; text-decoration: none;}
+a:visited   { color: #999; text-decoration: none;}
+
 #global_header {
   padding-left: 200px;
   border-bottom: 1px solid #999;
@@ -51,10 +56,34 @@
   top: 14px;
 }
 
+#project_description, 
+.sidebar, 
+.single_event .location.vcard,
+.single_venue .location.vcard {
+  background: rgb(50,50,50) 26%;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  color: #ccc;
+}
+
+.sidebar {
+  margin: 1em 1em 0 0;
+}
+
+#google_map {
+  border: 3px solid #aaa;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin: 0 0 1em 1em;
+}
+
 #content {
-  margin: 1em auto;
-  width: 992px;
+  margin: 0 auto;
+  padding: 1em 3em;
   font-size: 140%;
+  background-color: rgb(255,255,255) 90%;
 }
 
 .single_venue .location.vcard {
@@ -95,4 +124,10 @@
   list-style: none;
   margin: 0 0 1em;
   padding: 0;
+}
+
+#sponsors li img {
+  position: relative;
+  top: 7px;
+  left: 2px;
 }
