@@ -10,6 +10,7 @@ set :config_files,   ['database~custom.yml','theme.txt','secrets.yml','geocoder_
 task :preview do
   set :domain, "linode-calagator"
   set :rails_env, "preview"
+  set :revision, "origin/preview"
 end
 
 namespace :vlad do
