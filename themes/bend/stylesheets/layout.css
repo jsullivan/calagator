@@ -6,20 +6,33 @@ body {
 }
 
 #global_header {
-  background: #fff url(/themes/bend/images/activities.png);
+  background: #82c555;
   position: relative;
-  height: 70px;
+  height: 95px;
 }
 
 #global_header a {
-  color: #246;
+  color: #f9ffec
 }
 
 #top_footer {
-  color: #666;
+  background: #445544;
+  color: #f9ffec;
   padding: .5em 30px .5em 40px;
   font-size: 70%;
   clear: both;
+}
+
+
+#project_title {
+  background: url('/images/head_calagator.gif') no-repeat;
+  height: 31px;
+  left: 40px;
+  overflow: hidden;
+  position: absolute;
+  text-indent: -999px;
+  top: 25px;
+  width: 135px;
 }
 
 #app_menu ul {
@@ -41,7 +54,7 @@ body {
 }
 
 #app_menu li.active {
-  background: url('/images/nav_marker.png') no-repeat center bottom;
+  background: url('/images/nav_marker.gif') no-repeat center bottom;
 }
 
 #project_menu {
@@ -55,13 +68,13 @@ body {
 
 #search_form {
   position:absolute;
-  right: 10px;
-  bottom: 10px;
+  right: 30px;
+  top: 15px;
 }
 
 .subnav {
   font-size: 1.2em;
-  background: #94bcf7;
+  background: #bcf794;
   padding-left: 40px;
   height: 2em;
   line-height: 2em;
@@ -78,18 +91,22 @@ body {
 }
 
 .subnav a {
-  color: #444455;
+  color: #445544;
   padding-bottom: .42em;
 }
 
 .subnav .active {
-  background: url('/images/subnav_marker.png') no-repeat center bottom;
+  background: url('/images/subnav_marker.gif') no-repeat center bottom;
 }
 
+
+
 #content {
-  padding: 1em 30px 40px 40px;
+  min-height: 40em;
+  margin: 1em 30px 1em 40px;
   position: relative;
 }
+
 
 .sidebar h3 {
   font-weight: bold;
@@ -122,7 +139,7 @@ body {
   padding-top: 1em;
 }
 
-#list_items { margin-right: 160px; }
+#list_items { margin-right: 20em; }
 
 .event_table .description,
 .event_table .url,
@@ -135,7 +152,7 @@ ul.event_list .url {
 ul.event_list .list_date {
   text-align: right;
   padding-right: 1.5em;
-  border-right: 1px solid #d2e2fa;
+  border-right: 1px solid #e2fad2;
   vertical-align: top;
   width: 7em;
 }
@@ -146,7 +163,7 @@ ul.event_list .list_date {
 
 .event_table .day_of_week,
 ul.event_list .day_of_week {
-  color: #2d59a1;
+  color: #59a12d;
   font-weight: bold;
 }
 
@@ -156,16 +173,13 @@ ul.event_list .day_of_week {
 
 
 .sidebar {
-  padding: 1em;
+  background: #e8fbfe;
+  padding: 2em 30px 1em 1em;
   position: absolute;
   top: 0;
   right: 0;
-  margin: 0em 0em 1em 1em;
-  width: 150px;
-  border: solid 3px #94BCF7;
-  border-width: 0px 0px 2px 2px;
-  -moz-border-radius-bottomleft: 16px;
-  -webkit-border-bottom-left-radius: 16px;
+  margin: -1em -30px 0 0;
+  width: 200px;
 }
 
 .contentbar {
@@ -231,14 +245,14 @@ ul.event_list .list_date {
 }
 
 .single_event .date {
-  color: #5582c5;
+  color: #82c555;
   font-size: 1.3em;
   font-weight: bold;
   margin-bottom: 1em;
 }
 
 .single_event .location.vcard {
-  background: #fee8fb;
+  background: #e8fbfe;
   width: 45em;
   height: 16em;
   padding: 1em;
@@ -292,7 +306,7 @@ ul.event_list .list_date {
 ----------------------------------------*/
 
 .single_venue .location.vcard {
-  background: #fee8fb;
+  background: #e8fbfe;
   width: 45em;
   height: 16em;
   padding: 1em;
@@ -372,15 +386,10 @@ fieldset .help {
 }
 
 #project_description {
+  background: #e8fbfe;
   padding: 1em;
   width: 20em;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-  border: solid 3px #94BCF7;
-  border-width: 0px 2px 2px 0px;
-  -moz-border-radius-bottomright: 16px;
-  -webkit-border-bottom-right-radius: 16px;
+  margin: 0 2em 0 -1em;
 }
 
 #project_description a {
@@ -390,6 +399,21 @@ fieldset .help {
 #project_description h2 {
   font-weight: bold;
   margin-bottom: .5em;
+}
+
+#tagcloud {
+  padding: 1em;
+  width: 20em;
+  margin: 0 2em 0 -1em;
+}
+
+#tagcloud h2 {
+  font-weight: bold;
+  margin-bottom: .5em;
+}
+
+#homepage_sidebar {
+  float: left;
 }
 
 
