@@ -16,6 +16,7 @@ coverage/*
 db/*.sqlite3
 db/*.sqlite3.*
 db/schema.rb
+.DS_Store
 index/*
 log/*
 nbproject/*

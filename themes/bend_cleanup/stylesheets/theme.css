@@ -1,0 +1,122 @@
+/* colors:
+Blue: #182945
+Light-blue: #46A5E5
+Light-grey: #E8E8F0
+Green: #A1C436
+*/
+
+a:hover     { color: #445544; text-decoration: underline; }
+a:link      { color: #A1C436; text-decoration: none;}
+a:visited   { color: #A1C436; text-decoration: none;}
+body {background: #f5fafe;}
+h2 {
+  text-shadow:0px 1px 1px #ffffff;
+}
+#global_header {
+  background: #182945;
+}
+
+#search_form label { margin-right: 6px; }
+#global_header a, #search_form {
+  color: #eee;
+}
+
+#app_menu li {
+  padding: 5px;
+  text-transform: uppercase;
+}
+#app_menu li.active {
+  background: #46A5E5;
+  -webkit-border-radius: 5px 5px 0px 0px;
+  -moz-border-radius: 5px 5px 0px 0px;
+  border-radius: 5px 5px 0px 0px;
+  text-decoration: none;
+}
+.subnav {
+  padding-top: 4px;
+  height: 2.4em;
+  background: #46A5E5;
+}
+
+.subnav a { color: #fff;}
+
+.subnav .active {
+  background: none;
+  text-decoration: underline;
+}
+
+#search_field { width: 200px; }
+
+#project_title {
+  font-size: 20pt;
+  font-weight: bold;
+  font-family: 'Trebuchet MS','Lucida Grande',Verdana,Arial,Sans-Serif;
+  text-indent: 0px;
+  background: none;
+  letter-spacing: 1.5px;
+  top: 14px;
+}
+
+#project_description,
+.sidebar,
+.single_event .location.vcard,
+.single_venue .location.vcard {
+  background: #e8f4fc;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  color: gray;
+}
+
+.sidebar {
+  margin: 1em 1em 0 0;
+}
+
+#google_map {
+  border: 3px solid #aaa;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  margin: 0 0 1em 1em;
+}
+
+#content {
+  margin: 0 auto;
+  padding: 1em 3em;
+  font-size: 140%;
+  background-color: rgb(255,255,255) 90%;
+}
+
+.single_venue .location.vcard {
+  padding: 2em;
+  width: 680px;
+}
+
+#sponsors {
+  color: #ccc;
+  font-size: 14pt;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#top_footer {
+  text-align: right;
+  height: 150px;
+  padding-top:2em;
+  background: #182945;
+}
+
+#sponsors {
+  color: #fff;
+  font-size: 14pt;
+  list-style: none;
+  margin: 0 0 1em;
+  padding: 0;
+}
+
+#sponsors li img {
+  position: relative;
+  top: 7px;
+  left: 2px;
+}
